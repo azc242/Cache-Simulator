@@ -129,8 +129,11 @@ int main(int argc, char** argv){
         exit(EXIT_FAILURE); // unsuccessful termination
     }
 
-    // Dynamically allocate memory for cache
 
+    cacheParam.S = (int) pow(2, param.s);
+    cacheParam.B = (int) pow(2, param.b);
+
+    // Dynamically allocate memory for cache
     Cache cache;
     cache.sets = malloc(cacheParam.S * sizeof(CacheSet)); // allocate memory for sets
 
@@ -138,6 +141,16 @@ int main(int argc, char** argv){
         // allocate size of line * number of lines (associativity) per set
         cache.sets[i].lines = malloc(cacheParam.E * sizeof(CacheLine)); 
     }
+
+    // Hit, Miss, Eviction statistics
+    int hit_count = 0;
+    int miss_count = 0;
+    int eviction_count = 0;
+
+    // Variables in " [Operation] address,size" 
+    char operation; // Load, Store, Modify
+    int size; //
+    int64_t = addy;
 
 
 
@@ -151,7 +164,7 @@ int main(int argc, char** argv){
         // stub for compilation success
     }
 
-    printSummary(0, 0, 0);
+    printSummary(hit_count, miss_count, eviction_count);
     return 0;
 }
 
