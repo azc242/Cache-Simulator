@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <stdint.h>
+#include <math.h>
+#include <limits.h>
 
 //Name: Alan Chen
 //UserID: azc242
@@ -18,10 +19,12 @@ typedef struct{
     char *traceFile; // valgrind trace file
 } CacheParameter;
 
+typedef unsigned long long int address;
+
 /* Cache line struct 
 contains 64 bit memory address, time access tracker, valid bit */
 typedef struct{
-    int64_t tag; // 64 bit memory address
+    address tag; // 64 bit memory address
     int lru;
     int valid;
 } CacheLine;
@@ -130,8 +133,8 @@ int main(int argc, char** argv){
     }
 
 
-    cacheParam.S = (int) pow(2, param.s);
-    cacheParam.B = (int) pow(2, param.b);
+    cacheParam.S = (int) pow(2, cacheParam.s);
+    cacheParam.B = (int) pow(2, cacheParam.b);
 
     // Dynamically allocate memory for cache
     Cache cache;
@@ -143,18 +146,89 @@ int main(int argc, char** argv){
     }
 
     // Hit, Miss, Eviction statistics
-    int hit_count = 0;
-    int miss_count = 0;
-    int eviction_count = 0;
+    int hitCount = 0;
+    int missCount = 0;
+    int evictionCount = 0;
 
-    // Variables in " [Operation] address,size" 
+    // Variables in " [Operation] address" 
     char operation; // Load, Store, Modify
-    int size; //
-    int64_t = addy;
+    unsigned int addy;
+    int size;
+
+    // for verbose flag information
+    int hit = 0;
+    int evict = 0;
+
+    // variable to track which index to evict
+    int evictee = 0;
+
+    // counter to help with LRU eviction
+    int LRU = 0;
+
+
+    while(fscanf(fp, " %c %11x,%d", &operation, &addy, &size) > 0){
+        if(operation != 'I'){
+            printf("Address: %x    Operation: %c\n", addy, operation);
+
+            address addyTag = addy >> (cacheParam.b + cacheParam.s); // find tag bits
+            int tagSize = (64 - (cacheParam.b + cacheParam.s)); // tag size is 64 bit memory - s - b
+            unsigned long long temp = addy << (tagSize);
+            unsigned long long setIndex = temp >> (tagSize + cacheParam.b); 
+
+            CacheSet set = cache.sets[setIndex]; // go to proper set to search in
+             int last = INT_MAX;
+
+            /*
+                for loop int i to run thru E
+                    if lines[i] is valid then check to see if the tag matches the address
+                        if it does, increment hit_counter, HIT = 1, set the time to LRU
+                        and increment LRU
+
+                        if it doesnt, find the oldest guy for eviction */
+
+            for(int i = 0; i < cacheParam.E; i++){
+                if(set.lines[i].valid == 1){
+                    if(set.lines[i].tag == addy){
+                        hitCount++;
+                        hit = 1;
+                        set.lines[i].lru = LRU;
+                        LRU++;
+                    }
+
+                    else if(set.lines[i].lru < last){ // this else if is for finding the LRU to evict
+                        last = set.lines.[i].lru;
+                        evictee = i;
+                    }
+                }
+            }
+            
+            /*
+
+                    if not valid, check if its empty, if yes then set empty = i
+                        this is because if it were valid we would be taking it
+
+                if HIT wasnt set to 1, we got a miss
+                    increment miss counter
+                    check if there is an empty line
+                        set valid, tag and LRU if there is and increment LRU
+                    
+                    if there's not an empty line
+                        use LRU to find an eviction (we already did)
+                        set time, and tag
+                        incement evictions, timestamp
+
+                data modify implies load and store, so we are gonna have a hit no mater what
+
+                do verbose flag stuff
+
+                reset empty, hit, evict
 
 
 
 
+            */
+        }
+    }
 
 
 
@@ -164,7 +238,7 @@ int main(int argc, char** argv){
         // stub for compilation success
     }
 
-    printSummary(hit_count, miss_count, eviction_count);
+    printSummary(hitCount, missCount, evictionCount);
     return 0;
 }
 
