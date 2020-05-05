@@ -19,7 +19,7 @@ typedef struct{
 
 
 /* Usage Info */
-void csim_help_info()
+void displayUsage()
 {
   printf("Usage: ./csim [-hv] -s <num> -E <num> -b <num> -t <file>\n");
   printf("Options:\n");
@@ -32,7 +32,6 @@ void csim_help_info()
   printf("Examples:\n");
   printf("  linux>  ./csim -s 4 -E 1 -b 4 -t traces/yi.trace\n");
   printf("  linux>  ./csim -v -s 8 -E 2 -b 4 -t traces/yi.trace\n");
-
 }
 
 int main(int argc, char** argv){
@@ -47,34 +46,74 @@ int main(int argc, char** argv){
 
     /* read arvg with getopt()
     optarg does not need to be defined, it is a pointer to the original argv array
-
     */
-    while((c = getopt(argc, argv, "hvsEbt:")) != -1){
+    while((c = getopt(argc, argv, "hv::s:E:b:t:")) != -1){
         switch(c){
             case 'h':
+                // Optional flag for displaying usage information
                 helpFlag = 1;
                 break;
+
             case 'v':
+                // Optional flag for displaying trace information
                 verboseFlag = 1;
                 break;
+
             case 's':
+                // 2^s cache sets 
                 cacheParam.s = (atoi(optarg));
-                sFlag =1;
+                sFlag = 1;
                 break;
+
             case 'E':
+                // Associativity (lines per set)
                 cacheParam.E = (atoi(optarg));
                 EFlag = 1;
                 break;
+
             case 'b':
-                cacheParam.E = (atoi(optarg));
+                // Block bits (2^b block size in total)
+                cacheParam.b = (atoi(optarg));
                 bFlag = 1;
                 break;
+
             case 't':
-                cacheParam.E = (atoi(optarg));
+                // Valgrind trace
+                cacheParam.traceFile = optarg;
                 tFlag = 1;
                 break;
-
+            
+            default:
+                displayUsage();
+                break;
         }
+    }
+
+    /* Setting the -h flag causes the program to print the usage information
+    It also forces the program to terminate regardless of any other flags set
+    */
+    if(helpFlag == 1){
+        displayUsage();
+        exit(EXIT_SUCCESS); // successful termination
+    }
+
+    if(sFlag == 0 || EFlag == 0 || bFlag == 0 || tFlag == 0){
+        printf("./csim: Missing required command line argument\n");
+        displayUsage();
+        exit(EXIT_FAILURE); // unsuccessful termination
+    }
+
+    FILE *fp; // FILE pointer to open
+    fp = fopen(cacheParam.traceFile, "r"); // read valgrind trace file
+
+    if(fp == NULL){
+        printf("%s: No such file or directory boiii", cacheParam.traceFile);
+        exit(EXIT_FAILURE); // unsuccessful termination
+    }
+
+    if(verboseFlag == 1){
+        // print stuff do something
+        // stub for compilation success
     }
 
     printSummary(0, 0, 0);
