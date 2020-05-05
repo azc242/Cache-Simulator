@@ -152,23 +152,19 @@ int main(int argc, char** argv){
 
     // Variables in " [Operation] address" 
     char operation; // Load, Store, Modify
-    unsigned int addy;
+    address addy;
     int size;
 
     // for verbose flag information
     int hit = 0;
     int evict = 0;
-
-    // variable to track which index to evict
-    int evictee = 0;
-
-    // counter to help with LRU eviction
-    int LRU = 0;
+    int evictee = 0; // variable to track which index to evict
+    int LRU = 0; // counter to help with LRU eviction
+    int vacant = -1; // 
 
 
-    while(fscanf(fp, " %c %11x,%d", &operation, &addy, &size) > 0){
+    while(fscanf(fp, " %c %llx,%d", &operation, &addy, &size) > 0){
         if(operation != 'I'){
-            printf("Address: %x    Operation: %c\n", addy, operation);
 
             address addyTag = addy >> (cacheParam.b + cacheParam.s); // find tag bits
             int tagSize = (64 - (cacheParam.b + cacheParam.s)); // tag size is 64 bit memory - s - b
@@ -178,17 +174,10 @@ int main(int argc, char** argv){
             CacheSet set = cache.sets[setIndex]; // go to proper set to search in
              int last = INT_MAX;
 
-            /*
-                for loop int i to run thru E
-                    if lines[i] is valid then check to see if the tag matches the address
-                        if it does, increment hit_counter, HIT = 1, set the time to LRU
-                        and increment LRU
-
-                        if it doesnt, find the oldest guy for eviction */
-
             for(int i = 0; i < cacheParam.E; i++){
                 if(set.lines[i].valid == 1){
-                    if(set.lines[i].tag == addy){
+                    // printf("\n\nADDY: %llx\nset.lines[%d].tag = %llx\n", addy, i, set.lines[i].tag);
+                    if(set.lines[i].tag == addyTag){
                         hitCount++;
                         hit = 1;
                         set.lines[i].lru = LRU;
@@ -196,47 +185,70 @@ int main(int argc, char** argv){
                     }
 
                     else if(set.lines[i].lru < last){ // this else if is for finding the LRU to evict
-                        last = set.lines.[i].lru;
+                        last = set.lines[i].lru;
                         evictee = i;
                     }
+                }
+                /* If the line is not valid then it is vacant, so we can set this to be a vacant slot for future use */
+                else if(vacant == -1){
+                    vacant = i;
                 }
             }
             
             /*
 
-                    if not valid, check if its empty, if yes then set empty = i
-                        this is because if it were valid we would be taking it
-
                 if HIT wasnt set to 1, we got a miss
                     increment miss counter
                     check if there is an empty line
-                        set valid, tag and LRU if there is and increment LRU
-                    
-                    if there's not an empty line
-                        use LRU to find an eviction (we already did)
-                        set time, and tag
-                        incement evictions, timestamp
+                        set valid, tag and LRU if there is and increment LRU */
+            
+            if(hit != 1){ // no hit == miss
+                missCount++;
 
-                data modify implies load and store, so we are gonna have a hit no mater what
+                if(vacant > -1){ // miss, but there is an vacant line we can use
+                    set.lines[vacant].valid = 1;
+                    set.lines[vacant].tag = addyTag;
+                    set.lines[vacant].lru = LRU;
+                    LRU++; // increment LRU for next cache operation
+                }
 
-                do verbose flag stuff
+                else if(vacant < 0){
+                    evict = 1;
+                    set.lines[evictee].tag = addyTag;
+                    set.lines[evictee].lru = LRU;
+                    LRU++; // increment LRU for next cache operation
+                    evictionCount++;
+                }
+            }
 
-                reset empty, hit, evict
+            if(operation == 'M'){ // Modify loads first, then stores, so when it stores there will be a hit automatically
+                hitCount++;
+            }
 
+            if(verboseFlag == 1){
+                printf("%c %llx,%d ", operation, addy, size);
+                if(hit == 1){ // hit set to 1
+                    printf("%s", "hit ");
+                }
+                else{ // not hit == a miss
+                    printf("%s", "miss ");
+                    if(evict){
+                        printf("%s", "eviction" );
+                    }
+                }
 
-
-
-            */
+                if(operation == 'M'){
+                    printf("%s", "hit ");
+                }
+                printf("\n");
+            }
+            vacant = -1;
+            hit = 0;
+            evict = 0;
         }
     }
 
-
-
-
-    if(verboseFlag == 1){
-        // print stuff do something
-        // stub for compilation success
-    }
+    fclose(fp);
 
     printSummary(hitCount, missCount, evictionCount);
     return 0;
