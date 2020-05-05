@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdint.h>
 
 //Name: Alan Chen
 //UserID: azc242
 
-// cache parameters
+/* Cache parameters struct*/
 typedef struct{
     int s; // 2^s cache sets
     int S; // number of sets
@@ -15,8 +16,25 @@ typedef struct{
     int b; // parameter used for getting B
     int B; // B = 2^b (bytes per cache block)
     char *traceFile; // valgrind trace file
-} cacheParameter;
+} CacheParameter;
 
+/* Cache line struct 
+contains 64 bit memory address, time access tracker, valid bit */
+typedef struct{
+    int64_t tag; // 64 bit memory address
+    int lru;
+    int valid;
+} CacheLine;
+
+/* Cache set struct */
+typedef struct{
+    CacheLine *lines;
+} CacheSet;
+
+/* Cache struct */
+typedef struct{
+    CacheSet *sets;
+} Cache;
 
 /* Usage Info */
 void displayUsage()
@@ -36,7 +54,7 @@ void displayUsage()
 
 int main(int argc, char** argv){
     int c;
-    cacheParameter cacheParam; 
+    CacheParameter cacheParam; 
     int helpFlag = 0;
     int verboseFlag = 0;
     int sFlag = 0;
@@ -110,6 +128,23 @@ int main(int argc, char** argv){
         printf("%s: No such file or directory boiii", cacheParam.traceFile);
         exit(EXIT_FAILURE); // unsuccessful termination
     }
+
+    // Dynamically allocate memory for cache
+
+    Cache cache;
+    cache.sets = malloc(cacheParam.S * sizeof(CacheSet)); // allocate memory for sets
+
+    for(int i = 0; i < cacheParam.S; i++){
+        // allocate size of line * number of lines (associativity) per set
+        cache.sets[i].lines = malloc(cacheParam.E * sizeof(CacheLine)); 
+    }
+
+
+
+
+
+
+
 
     if(verboseFlag == 1){
         // print stuff do something
