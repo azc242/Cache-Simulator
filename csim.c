@@ -40,8 +40,7 @@ typedef struct{
 } Cache;
 
 /* Usage Info */
-void displayUsage()
-{
+void displayUsage(){
   printf("Usage: ./csim [-hv] -s <num> -E <num> -b <num> -t <file>\n");
   printf("Options:\n");
   printf("  -h         Print this help message.\n");
@@ -172,7 +171,7 @@ int main(int argc, char** argv){
             unsigned long long setIndex = temp >> (tagSize + cacheParam.b); 
 
             CacheSet set = cache.sets[setIndex]; // go to proper set to search in
-             int last = INT_MAX;
+            int last = INT_MAX;
 
             for(int i = 0; i < cacheParam.E; i++){
                 if(set.lines[i].valid == 1){
