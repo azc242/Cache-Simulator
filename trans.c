@@ -11,6 +11,9 @@
 #include "lab3.h"
 
 int is_transpose(int M, int N, int A[N][M], int B[M][N]);
+void transpose_32(int M, int N, int A[N][M], int B[M][N]);
+void transpose_64t(int M, int N, int A[N][M], int B[M][N]);
+// void transpose_64(int M, int N, int A[N][M], int B[M][N]);
 
 /* 
  * transpose_submit - This is the solution transpose function that you
@@ -26,6 +29,12 @@ void transpose_submit(int M, int N, int A[N][M], int B[M][N])
         transpose_32(M, N, A, B);
         return;
     }
+
+    if(M == 64 && N == 64){
+        transpose_64t(M, N, A, B);
+        return;
+    }
+
 }
 
 void transpose_32(int M, int N, int A[N][M], int B[M][N]){
@@ -54,6 +63,57 @@ void transpose_32(int M, int N, int A[N][M], int B[M][N]){
         }
     }
 }
+
+// /* Uses row-major order and the locality principles to access contiguous array indeces */
+// void transpose_64(int M, int N, int A[N][M], int B[M][N]){
+
+//     // temp variables to set and refresh after each block iteration
+//     int temp, temp1, temp2, temp3, temp4, temp5, temp6, temp7
+
+//     for(int col = 0; col < M; col += 8){
+//         for(int row = 0; row < N; row += 8){
+//             /* int p acts as a placeholder, and the 8 temps are for accessing
+//             contiguous array elements to take advantage of spatial and temporal locality in
+//             accessing elements near each other at the same time */
+//             for(int p = row; p < row + 4; ++p){
+
+//             }
+//             for(int p = col; p < col + 8; ++p){
+
+//             }
+
+//         }
+//     }
+// }
+
+
+void transpose_64t(int M, int N, int A[N][M], int B[M][N]){
+
+    int diagonalElement;
+    int diagonalIndex;
+    
+    for(int col = 0; col < M; col += 4){
+        for(int row = 0; row < N; row += 4){
+
+            for(int rBlock = row; rBlock < row + 4; ++rBlock){
+                for(int cBlock = col; cBlock < col + 4; ++cBlock){
+                    if(rBlock != cBlock){
+                        B[cBlock][rBlock] = A[rBlock][cBlock];
+                    }
+                    else{
+                        diagonalElement = A[rBlock][cBlock];
+                        diagonalIndex = rBlock;
+                    }
+                }
+                if(col == row){
+                    B[diagonalIndex][diagonalIndex] = diagonalElement;
+                }
+            }
+
+        }
+    }
+}
+
 
 /* 
  * You can define additional transpose functions below. We've defined
