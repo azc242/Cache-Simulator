@@ -22,15 +22,37 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
-    for(int i = 0; i < N; i += 8){
-        for(int j = 0; j < M; j += 8){
-            for(int k = i; k < i + 8; ++k){
-                for(int l = j; l < j + 8; ++l){
-                    B[k][l] = A[l][k];
+    if(M == 32 && N == 32){
+        transpose_32(M, N, A, B);
+        return;
+    }
+}
+
+void transpose_32(int M, int N, int A[N][M], int B[M][N]){
+
+    int diagonalElement;
+    int diagonalIndex;
+    
+    for(int col = 0; col < M; col += 8){
+        for(int row = 0; row < N; row += 8){
+
+            for(int rBlock = row; rBlock < row + 8; ++rBlock){
+                for(int cBlock = col; cBlock < col + 8; ++cBlock){
+                    if(rBlock != cBlock){
+                        B[cBlock][rBlock] = A[rBlock][cBlock];
+                    }
+                    else{
+                        diagonalElement = A[rBlock][cBlock];
+                        diagonalIndex = rBlock;
+                    }
+                }
+                if(col == row){
+                    B[diagonalIndex][diagonalIndex] = diagonalElement;
                 }
             }
+
         }
-    }   
+    }
 }
 
 /* 
@@ -56,6 +78,8 @@ void trans(int M, int N, int A[N][M], int B[M][N])
 }
 
 
+
+
 /*
  * registerFunctions - This function registers your transpose
  *     functions with the driver.  At runtime, the driver will
@@ -70,6 +94,8 @@ void registerFunctions()
 
     /* Register any additional transpose functions */
     registerTransFunction(trans, trans_desc); 
+
+    // registerTransFunction(transpose_32_32, transpose_32_32_desc);
 
 }
 
