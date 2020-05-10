@@ -74,87 +74,87 @@ void transpose_32(int M, int N, int A[N][M], int B[M][N]){
 
 
 void transpose_64(int M, int N, int A[N][M], int B[M][N]){
-    int blockSize = 8;
-	int gap = 4;
 	int row, col;	
 
-	for (col = 0; col < M; col += blockSize){ // 0-63
-		for (row = 0; row < N; row += blockSize){ // 0-63
+	for (col = 0; col < M; col += 8){ // 0-63, counting by multiples of 8
+		for (row = 0; row < N; row += 8){ // 0-63, counting by multiples of 8
 			
-			int nextX = col;
-			int nextY = row;
+			int nextCol = col;
+			int nextRow = row;
             
-            nextY += blockSize; // increments by 8
+            nextRow += 8; // increments by block size which is 8
             /* once our y var is equal to the matrix edge increment x var
             and go to a new row and reset the Y var */
-            if (nextY >= N){ 
-                nextX += blockSize;
-                nextY -= N;
+            if (nextRow >= N){ 
+                nextCol += 8;
+                nextRow -= N;
             }
             
-            while (col == nextY){
-				nextY += blockSize;
-				if (nextY >= N){
-					nextX += blockSize;
-					nextY -= N;
+            while (col == nextRow){
+				nextRow += 8;
+				if (nextRow >= N){
+					nextCol += 8;
+					nextRow -= N;
 				}
 			}
 
-            // will create the next block 
-			int nextX_2 = nextX;
-			int nextY_2 = nextY;
+            // creates the next block 
+			int nextCol_2 = nextCol;
+			int nextRow_2 = nextRow;
 
-            nextY_2 += blockSize;
-            if (nextY_2 >= N){
-                nextX_2 += blockSize;
-                nextY_2 -= N;				
+            nextRow_2 += 8;
+            if (nextRow_2 >= N){
+                nextCol_2 += 8;
+                nextRow_2 -= N;				
             }
 
-			while (col == nextY_2){
-				nextY_2 += blockSize;
-				if (nextY_2 >= N){
-					nextX_2 += blockSize;
-					nextY_2 -= N;				
+			while (col == nextRow_2){
+				nextRow_2 += 8;
+				if (nextRow_2 >= N){
+					nextCol_2 += 8;
+					nextRow_2 -= N;				
 				}
 			}
 
-			if (nextX >= M){
-                // moves 8x8 block from A to B, with no miss
-				for (int i = 0; i < blockSize; i++){
-					for (int j = 0; j < blockSize; j++){
+			if (nextCol >= M){
+                /* moves 8x8 block from A to B, with no miss. This is a regular transpose
+                since we don't have space to load 2 blocks from A to B */
+				for (int i = 0; i < 8; i++){
+					for (int j = 0; j < 8; j++){
 						B[col + j][row + i] = A[row + i][col + j];	
                     }
                 }		
 			} 
             else {
                 // moves the upper 4x8 block between matrices
-				for (int i = 0; i < gap; i++){
-					for (int j = 0; j < blockSize; j++){
-						B[nextX + i][nextY + j] = A[row + i][col + j];	
+				for (int i = 0; i < 4; i++){
+					for (int j = 0; j < 8; j++){
+						B[nextCol + i][nextRow + j] = A[row + i][col + j];	
                     }
                 }		
 				
                 // moves lower 4x8 block between matrices
-				for (int i = 0; i < gap; i++){
-					for (int j = 0; j < blockSize; j++){
-						B[nextX_2 + i][nextY_2 + j] = A[row + gap + i][col + j];	
+				for (int i = 0; i < 4; i++){
+					for (int j = 0; j < 8; j++){
+						B[nextCol_2 + i][nextRow_2 + j] = A[row + 4 + i][col + j];	
                     }
                 }	
 
                 // transposes the lead 4x4 to the top of the 4x8 destination
-				for (int i = 0; i < gap; i++){
-					for (int j = 0; j < gap; j++){
-						B[col + j][row + i] = B[nextX + i][nextY + j];
-						B[col + j][row + gap + i] = B[nextX_2 + i][nextY_2 + j];	
-					}
+				for (int i = 0; i < 4; i++){
+					for (int j = 0; j < 4; j++){
+                        B[col + j][row + i] = B[nextCol + i][nextRow + j];
+                        B[col + j][row + 4 + i] = B[nextCol_2 + i][nextRow_2 + j];	
+                    }
                 }
 				// transposes trailing 4x4 to the bottom of the remaining 4x8 of the total 8x8 block
-				for (int i = 0; i < gap; i++){
-					for (int j = 0; j < gap; j++){
-						B[col + gap + j][row + i] = B[nextX + i][nextY + gap + j];
-						B[col + gap + j][row + gap + i] = B[nextX_2 + i][nextY_2 + gap + j];	
+				for (int i = 0; i < 4; i++){
+					for (int j = 0; j < 4; j++){
+						B[col + 4 + j][row + i] = B[nextCol + i][nextRow + 4 + j];
+						B[col + 4 + j][row + 4 + i] = B[nextCol_2 + i][nextRow_2 + 4 + j];	
 					}			
                 }
+
 			}
         }
     }
@@ -227,7 +227,7 @@ void registerFunctions()
     registerTransFunction(transpose_submit, transpose_submit_desc); 
 
     /* Register any additional transpose functions */
-    registerTransFunction(trans, trans_desc); 
+    // registerTransFunction(trans, trans_desc); 
 
     // registerTransFunction(transpose_32_32, transpose_32_32_desc);
 
