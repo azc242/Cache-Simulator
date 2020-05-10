@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include "lab3.h"
 
+//Name: Alan Chen
+//UserID: azc242
+
 int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 void transpose_32(int M, int N, int A[N][M], int B[M][N]);
 void transpose_64(int M, int N, int A[N][M], int B[M][N]);
@@ -44,19 +47,22 @@ void transpose_32(int M, int N, int A[N][M], int B[M][N]){
     int diagonalElement;
     int diagonalIndex;
     
+    // first two loops iterate through the columns and rows
     for(int col = 0; col < M; col += 8){
         for(int row = 0; row < N; row += 8){
-
+            // for each row and column, each of the following loops iteratres 16 times
             for(int rBlock = row; rBlock < row + 8; ++rBlock){
                 for(int cBlock = col; cBlock < col + 8; ++cBlock){
                     if(rBlock != cBlock){
                         B[cBlock][rBlock] = A[rBlock][cBlock];
                     }
+                    // temporarily store diagonals, we'll access them later to avoid cache miss
                     else{
                         diagonalElement = A[rBlock][cBlock];
                         diagonalIndex = rBlock;
                     }
                 }
+                // put in the cache diagonals at the end 
                 if(col == row){
                     B[diagonalIndex][diagonalIndex] = diagonalElement;
                 }
@@ -157,18 +163,23 @@ void transpose_64(int M, int N, int A[N][M], int B[M][N]){
 void transpose_61_67(int M, int N, int A[N][M], int B[M][N]){
     int dElement;
     int dIndex;
-   for(int col = 0; col < M; col += 16){
+
+    // first two loops iterate through the columns and rows
+    for(int col = 0; col < M; col += 16){
         for(int row = 0; row < N; row += 16){
+            // for each row and column, each of the following loops iteratres 16 times
             for(int rBlock = row; (rBlock < row + 16) && rBlock < N; rBlock++){
                 for(int cBlock = col; (cBlock < col + 16) && cBlock < M; cBlock++){
-                    if(rBlock != cBlock){
+                    if(rBlock != cBlock){ // not a diagonal so we perform transpose
                         B[cBlock][rBlock] = A[rBlock][cBlock];
                     }
+                    // temporarily store diagonals, we'll access them later to avoid cache miss
                     else{
                         dIndex = cBlock;
                         dElement = A[rBlock][cBlock];
                     }
                 }
+                // put in the cache diagonals at the end 
                 if(row == col){
                     B[dIndex][dIndex] = dElement;
                 }
