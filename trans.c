@@ -13,6 +13,7 @@
 int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 void transpose_32(int M, int N, int A[N][M], int B[M][N]);
 void transpose_64(int M, int N, int A[N][M], int B[M][N]);
+void transpose_61_67(int M, int N, int A[N][M], int B[M][N]);
 
 /* 
  * transpose_submit - This is the solution transpose function that you
@@ -30,9 +31,11 @@ void transpose_submit(int M, int N, int A[N][M], int B[M][N])
     }
 
     if(M == 64 && N == 64){
-        transpose_64_64(M, N, A, B);
+        transpose_64(M, N, A, B);
         return;
     }
+
+    transpose_61_67(M, N, A, B);
 
 }
 
@@ -147,6 +150,29 @@ void transpose_64(int M, int N, int A[N][M], int B[M][N]){
 					}			
                 }
 			}
+        }
+    }
+}
+
+void transpose_61_67(int M, int N, int A[N][M], int B[M][N]){
+    int dElement;
+    int dIndex;
+   for(int col = 0; col < M; col += 16){
+        for(int row = 0; row < N; row += 16){
+            for(int rBlock = row; (rBlock < row + 16) && rBlock < N; rBlock++){
+                for(int cBlock = col; (cBlock < col + 16) && cBlock < M; cBlock++){
+                    if(rBlock != cBlock){
+                        B[cBlock][rBlock] = A[rBlock][cBlock];
+                    }
+                    else{
+                        dIndex = cBlock;
+                        dElement = A[rBlock][cBlock];
+                    }
+                }
+                if(row == col){
+                    B[dIndex][dIndex] = dElement;
+                }
+            }
         }
     }
 }
