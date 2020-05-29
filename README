@@ -7,7 +7,7 @@ Running the autograders:
 Before running the autograders, compile your code:
     linux> make
 
-Check the correctness of your simulator:
+`` Check the correctness of your simulator: ``
     linux> ./test-csim
 
 Check the correctness and performance of your transpose functions:
