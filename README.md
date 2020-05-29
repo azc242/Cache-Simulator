@@ -81,3 +81,15 @@ csim-ref* The executable reference cache simulator
 test-csim* Tests the cache simulator
 
 traces/ Trace files used by test-csim.c
+
+### Transpose Function
+The `trans.c` program transposes a matrix of either size 32x32, 64x64, or 61x67 and optimizes the misses using blocking.
+To run the transpose program, type
+
+    linux> make
+    linux>./test-trans -M 32 -N 32
+M and N are the dimensions of the matrix being transposed, respectively.
+It can be tested in combination with the Cache Simulator by typing
+
+    linux> ./driver.py
+You must run the cache simulator and transpose program individually once before using `driver.py`.
